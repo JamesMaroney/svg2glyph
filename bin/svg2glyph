@@ -1,0 +1,29 @@
+#!/usr/bin/env ruby
+require 'fileutils'
+
+source_file = ARGV[0]
+target_dir = ARGV[1].nil? ? 'glyphs' : ARGV[1]
+
+abort("An input svg file must be specified") if ARGV[0].nil?
+abort("The specified svg file does not exist: #{source_file}") unless File.exists? source_file
+
+FileUtils.mkdir_p target_dir unless Dir.exists? target_dir
+
+#File.open(source_file).read.scan(/id="(.*?)".*?d="(.*?)"/m) do |m|
+count=0
+File.open(source_file).read.scan(/id="(.*?)".*?<path.*?d="(.*?)"/m) do |m|
+  path = "#{target_dir}/#{m[0]}.svg"
+  puts "creating #{path}"
+  count = count+1
+  File.open(path, "w+") do |out|
+    out.write <<eos
+<?xml version="1.0" encoding="utf-8"?>
+<!DOCTYPE svg PUBLIC "-//W3C//DTD SVG 1.1//EN" "http://www.w3.org/Graphics/SVG/1.1/DTD/svg11.dtd">
+<svg version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" x="0px" y="0px" width="1000px"
+   height="1000px" viewBox="0 0 1000 1000" enable-background="new 0 0 1000 1000" xml:space="preserve">
+  <path d="#{m[1]}" />
+</svg>
+eos
+  end
+end
+puts "Finished creating #{count} glyphs"
